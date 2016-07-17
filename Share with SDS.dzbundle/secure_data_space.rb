@@ -326,6 +326,38 @@ class SecureDataSpace
   end
   
 
+  def check_password_compliance(password)
+    self.login_required
+    begin
+      api = "/config/settings"
+      response = RestClient.get "#{@host}#{PATH}#{api}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      settings = JSON.parse(response)
+    rescue
+      puts $!
+    end
+    
+    allow_weak_passwords = false
+    settings["items"].each do |item|
+      if item["key"] == "allow_system_global_weak_password"
+        if item["value"] == true
+          allow_weak_passwords = true
+          break
+        else
+          allow_weak_passwords = false
+          break
+        end
+      end 
+    end
+    
+    return false if password.length < 8
+    return false if /[a-z]/.match(password) == nil
+    return false if /[0-9]/.match(password) == nil
+    return false if allow_weak_passwords == false && /[A-Z]/.match(password) == nil
+    return false if allow_weak_passwords == false && /[\W]/.match(password) == nil
+
+    return true
+  end
+
 
   protected
 

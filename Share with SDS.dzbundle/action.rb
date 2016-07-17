@@ -1,15 +1,15 @@
 # Dropzone Action Info
 # Name: Share with Secure Data Space
-# Description: Upload a file to SSP Secure Data Space and create a share link (URL will be placed clipboard). Holding 'Command' (⌘) will expire the uploaded file and its share link after 14 days. Clicking on this Action copies the latest share link to the clipboard.\nIcon is owned by SSP Europe GmbH.
+# Description: Upload a file to SSP Secure Data Space and create a share link (URL will be placed clipboard). Holding 'Command' (⌘) or 'Option' (⌥) will expire the uploaded file and its share link after 14 days, 'Control' (^) or 'Option' (⌥) will allow you to set a password for the share link. Clicking on this Action copies the latest share link to the clipboard.\nIcon is owned by SSP Europe GmbH.
 # Handles: Files
 # Creator: Florian Scheuer
 # URL: https://github.com/F-Pseudonym/dropzone-share-with-sds
 # Events: Dragged, Clicked
-# KeyModifiers: Command
+# KeyModifiers: Command, Control, Option
 # SkipConfig: No
 # RunsSandboxed: Yes
 # OptionsNIB: ExtendedLogin
-# Version: 1.3
+# Version: 1.4
 # MinDropzoneVersion: 3.0
 
 
@@ -29,13 +29,38 @@ def dragged
   
   
   # User log-on
-  auth_token = sds.login ENV["username"], ENV["password"]
+  begin
+    auth_token = sds.login ENV["username"], ENV["password"]
+  rescue
+    $dz.fail("Login error. Please check console for debug info.")
+  end
   
 
   if auth_token == "" or auth_token == nil
     $dz.fail("Login error. No token provided.")
   end
   
+
+  # Determinate Password
+  share_password = nil
+  message = '"Choose your password:"'
+  if ENV['KEY_MODIFIERS'] == 'Option' || ENV['KEY_MODIFIERS'] == 'Control'
+
+    while share_password == nil do
+      input = $dz.cocoa_dialog('standard-inputbox --title "Password for Share Link" --informative-text '+message+' --no-show --no-newline')
+      button, share_password = input.split("\n")
+
+      if button == "2"
+        $dz.fail("Canceled by user.")
+      end
+      
+      unless sds.check_password_compliance share_password
+        message = '"Please chose a valid password! (8+ characters, uppercase, lowercase, special chars)"'
+        share_password = nil
+      end
+    end
+    
+  end
   
   $dz.percent(5)
     
@@ -45,7 +70,11 @@ def dragged
   container_id = 0
   path.each do |name|
     # Get Data Rooms to retrieve room_id
-    nodes = sds.get_nodes_by_name name, container_id, depth_level = 0
+    begin
+      nodes = sds.get_nodes_by_name name, container_id, depth_level = 0
+    rescue
+      $dz.fail("Error retrieving Folder info. Please check console for debug info.")
+    end
 
     # Fetch room_id
     if nodes["range"]["total"] > 0
@@ -60,9 +89,17 @@ def dragged
     else    
       # Create Room/Folder
       if container_id == 0
-        node = sds.create_room name
+        begin
+          node = sds.create_room name
+        rescue
+          $dz.fail("Error creating Data Room. Please check console for debug info.")
+        end
       else
-        node = sds.create_folder name, container_id
+        begin
+          node = sds.create_folder name, container_id
+        rescue
+          $dz.fail("Error creating folder. Please check console for debug info.")
+        end
       end
       container_id = node["id"]
     end
@@ -76,7 +113,11 @@ def dragged
   # Addtional folder if more than 1 file
   if $items.count > 1
     name = DateTime.now.strftime('%FT%H-%M-%S.%L')
-    node = sds.create_folder name, container_id
+    begin
+      node = sds.create_folder name, container_id
+    rescue
+      $dz.fail("Error creating folder. Please check console for debug info.")
+    end
     container_id = node["id"]
     container_name = node["name"]
   end
@@ -86,7 +127,7 @@ def dragged
 
 
   # calculate expiry date
-  if ENV['KEY_MODIFIERS'] == 'Command'
+  if ENV['KEY_MODIFIERS'] == 'Command' || ENV['KEY_MODIFIERS'] == 'Option'
     expiryDate = DateTime.now + validity
   else
     expiryDate = nil
@@ -103,7 +144,11 @@ def dragged
     file_name = file.rpartition('/').last
     
     # Upload File
-    file_info = sds.upload_file File.new(file), container_id, expire_at = expiryDate
+    begin
+      file_info = sds.upload_file File.new(file), container_id, expire_at = expiryDate
+    rescue
+      $dz.fail("Error uploading file. Please check console for debug info.")
+    end
   
     if file_info == nil
       $dz.fail("Upload failed.")
@@ -127,8 +172,12 @@ def dragged
   end
   
   # Create share link
-  share = sds.create_download_share id, share_name, nil, false, expire_at = expiryDate
-  access_key = share["accessKey"]
+  begin
+    share = sds.create_download_share id, share_name, share_password, false, expire_at = expiryDate
+    access_key = share["accessKey"]
+  rescue
+    $dz.fail("Error creating Share Link. Please check console for debug info.")
+  end
   
   if access_key == nil
     $dz.fail("Error sharing file: No Access Key was provided")

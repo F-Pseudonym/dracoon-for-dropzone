@@ -1,0 +1,9 @@
+Version 1.4
+-----------
+> Added dialogue to set a password for the share link (hold 'Control' (^) or 'Option' (⌥)).
+> Communication failures with SDS are now reported to the user.
+
+
+Version 1.3
+-----------
+> First Release on github.
