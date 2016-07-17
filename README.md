@@ -19,6 +19,8 @@ The fields "Port" and "Root URL" are currently not used – you can leave them e
 ## Usage
 Simply drag one or more files you'd like to share on the action in your Dropzone grid. The files will be uploaded and a Share Link is automatically created and placed in your clipboard. Simply paste it wherever you need it.
 
-If you hold the Command Key (⌘) while releasing your files, an expiry date for the file(s) and the Share Link will be set to 14 days. This will result in Share Link and file(s) to be removed after two weeks from *Secure Data Space*.
+If you hold the Command Key (⌘) or the Option Key (⌥) while releasing your files, an expiry date for the file(s) and the Share Link will be set to 14 days. This will result in Share Link and file(s) to be removed after two weeks from *Secure Data Space*.
+
+By holding the Control Key (^) or the Option Key (⌥) while releasing your files, you will be prompted for a password to protect your Share Link. Please keep in mind that password policies might be enforced.
 
 Clicking on the Dropzone action will copy the latest Share Link once more to your clipboard so you might recover it if you accidentally overwrote it already.
