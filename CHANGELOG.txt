@@ -1,3 +1,10 @@
+Version 1.5
+-----------
+> Ensured compatibility with upcoming API v4 (Release R3/2016 of SSP Secure Data Space).
+> Improvement: Default path "Dropzone_Share" is selected of no Remote Path is provided in configuration.
+> Fixed a bug when entering an empty password.
+
+
 Version 1.4
 -----------
 > Added dialogue to set a password for the share link (hold 'Control' (^) or 'Option' (⌥)).

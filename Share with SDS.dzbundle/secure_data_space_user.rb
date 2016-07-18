@@ -1,12 +1,3 @@
-# v. 0.5
-#
-# by Florian Scheuer
-# florian-scheuer.de
-#
-# Currently, only SDS user is an object
-# All other SDS objects are returned as arrays
-#
-#
 
 require 'rest_client'
 require 'json'
@@ -14,15 +5,15 @@ require 'json'
 class SecureDataSpaceUser
   
   attr_reader :auth_token, :id, :login, :first_name, :last_name, :title, :gender, :customer_id, :customer_name, :raw
-  PATH = "/api/v3"
   
-  def initialize(sds, auth_token)
+  def initialize(sds, auth_token, path="/api/v3")
     @auth_token = auth_token
     @sds = sds
+    @path = path
     
     begin
       api = "/user/account"
-      response = RestClient.get "#{sds.host}#{PATH}#{api}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      response = RestClient.get "#{sds.host}#{@path}#{api}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
 
       @raw =JSON.parse(response)
       @id = @raw["id"]

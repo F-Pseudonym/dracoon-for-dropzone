@@ -16,10 +16,11 @@
 require 'Date'
 require 'secure_data_space'
 
-def dragged
-  
-  validity = 14 #days
+DEFAULT_PATH = "Dropzone_Share" #if no remote path is set in config
+DEFAULT_VALIDITY = 14 #days
 
+
+def dragged  
 
   sds = SecureDataSpace.new ENV["server"]  
 
@@ -54,19 +55,28 @@ def dragged
         $dz.fail("Canceled by user.")
       end
       
-      unless sds.check_password_compliance share_password
-        message = '"Please chose a valid password! (8+ characters, uppercase, lowercase, special chars)"'
-        share_password = nil
+      begin
+        unless sds.check_password_compliance share_password
+          message = '"Please chose a valid password! (8+ characters, uppercase, lowercase, special chars)"'
+          share_password = nil
+        end
+      rescue
+        $dz.fail("Error checking password compliance. Please check console for debug info.")
       end
     end
     
   end
   
   $dz.percent(5)
-    
+  
     
   # Determine Container ID for storage location
-  path = ENV["remote_path"].split('/')
+  if ENV["remote_path"] != nil
+    full_path = ENV["remote_path"]
+  else
+    full_path = DEFAULT_PATH
+  end
+  path = full_path.split('/')
   container_id = 0
   path.each do |name|
     # Get Data Rooms to retrieve room_id
@@ -128,7 +138,7 @@ def dragged
 
   # calculate expiry date
   if ENV['KEY_MODIFIERS'] == 'Command' || ENV['KEY_MODIFIERS'] == 'Option'
-    expiryDate = DateTime.now + validity
+    expiryDate = DateTime.now + DEFAULT_VALIDITY
   else
     expiryDate = nil
   end
@@ -190,7 +200,11 @@ def dragged
 
   
   # User logout
-  sds.logout
+  begin
+    sds.logout
+  rescue
+    $dz.fail("Error logging off. Please check console for debug info.")
+  end
   
   # Finish
   $dz.finish("Success!")
