@@ -11,6 +11,7 @@
 # OptionsNIB: ExtendedLogin
 # Version: 1.5
 # MinDropzoneVersion: 3.0
+# UniqueID: 3920135319837973180911208394894
 
 
 require 'Date'
