@@ -9,7 +9,7 @@
 # SkipConfig: No
 # RunsSandboxed: Yes
 # OptionsNIB: ExtendedLogin
-# Version: 1.4
+# Version: 1.5
 # MinDropzoneVersion: 3.0
 
 
