@@ -77,6 +77,14 @@ def dragged
   else
     full_path = DEFAULT_PATH
   end
+  
+  if full_path.start_with?("/")
+    full_path = full_path.slice(1,full_path.size)
+  end
+  if full_path.end_with?("/")
+    full_path = full_path.slice(0,full_path.size-1)
+  end
+  
   path = full_path.split('/')
   container_id = 0
   path.each do |name|

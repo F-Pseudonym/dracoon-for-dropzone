@@ -4,6 +4,7 @@ require 'json'
 require 'Date'
 require 'digest'
 require 'securerandom'
+require 'uri'
 require './secure_data_space_user'
 
 
@@ -25,7 +26,7 @@ class SecureDataSpace
     
     # Remove trailing /
     if @host.end_with?("/")
-      @host = @host.slice(0,host.size-1)
+      @host = @host.slice(0,@host.size-1)
     end
     
     # Check connectivity
@@ -136,7 +137,7 @@ class SecureDataSpace
   def get_nodes_by_name(name, parent_id = 0, depth_level = 0)
     self.login_required
 
-    nodes(parent_id, depth_level, filter = "name:cn:#{name}")
+    nodes(parent_id, depth_level, filter = "name:cn:#{URI.escape(name)}")
   end
   
   
