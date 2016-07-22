@@ -26,7 +26,7 @@ def dragged
   sds = SecureDataSpace.new ENV["server"]  
 
       
-  $dz.begin("Starting Share Operation...")
+  $dz.begin("Starting Preparations")
   $dz.determinate(true)
   
   
@@ -69,7 +69,7 @@ def dragged
   end
   
   $dz.percent(5)
-  
+  $dz.begin("Selecting target location")
     
   # Determine Container ID for storage location
   if ENV["remote_path"] != nil
@@ -164,6 +164,7 @@ def dragged
     
     # Upload File
     begin
+      $dz.begin("Uploading #{file_name}")
       file_info = sds.upload_file File.new(file), container_id, expire_at = expiryDate
     rescue
       $dz.fail("Error uploading file. Please check console for debug info.")
@@ -192,6 +193,7 @@ def dragged
   
   # Create share link
   begin
+    $dz.begin("Creating Share Link")
     share = sds.create_download_share id, share_name, share_password, false, expire_at = expiryDate
     access_key = share["accessKey"]
   rescue
