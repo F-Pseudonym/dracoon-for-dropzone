@@ -2,7 +2,7 @@
 Action for Dropzone to easily share files via *SSP Secure Data Space*
 
 ## Disclaimer
-*Secure Data Space* is a cloud storage product/service by **SSP Europe GmbH** (http://secure-data-space.com). The icon is property of SSP Europe GmbH.
+*Secure Data Space* is a cloud storage product/service by *SSP Europe GmbH* (http://secure-data-space.com). The icon is property of *SSP Europe GmbH*.
 
 ## General Information
 This action for Dropzone 3 for Mac (https://aptonic.com/) can be used to easily upload files to *SSP Secure Data Space* (*SDS*) and provide a Share Link which is placed in the clipboard. This Share Link can be used to provide the uploaded file(s) to third parties.
@@ -22,5 +22,7 @@ Simply drag one or more files you'd like to share on the action in your Dropzone
 If you hold the Command Key (⌘) or the Option Key (⌥) while releasing your files, an expiry date for the file(s) and the Share Link will be set to 14 days. This will result in Share Link and file(s) to be removed after two weeks from *Secure Data Space*.
 
 By holding the Control Key (^) or the Option Key (⌥) while releasing your files, you will be prompted for a password to protect your Share Link. Please keep in mind that password policies might be enforced.
+
+Simple upload (without creation of share link) of files is possible by holding the Shift Key (⇧) while dropping them on the action icon.
 
 Clicking on the Dropzone action will copy the latest Share Link once more to your clipboard so you might recover it if you accidentally overwrote it already.

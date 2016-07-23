@@ -178,7 +178,7 @@ class SecureDataSpace
 
   def upload_file(file, parent_id, expire_at = nil, resolution_strategy = "autorename", classification = 1, notes = nil)
     self.login_required
-    
+
     if !File.file? file
       fail("File does not exist or is not accessible!")
     end
@@ -192,7 +192,16 @@ class SecureDataSpace
     # Create upload channel
     begin
       api = "/nodes/files/uploads"
-      response = RestClient.post "#{@host}#{@path}#{api}", {'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'classification' => classification, 'expireAt' => expire_at, 'notes' => notes}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      if @path == "api/v3"
+        response = RestClient.post "#{@host}#{@path}#{api}", {'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'classification' => classification, 'expireAt' => expire_at, 'notes' => notes}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      else
+        if expire_at == nil
+          expiration = nil
+        else
+          expiration = {'expireAt' => expire_at.to_s, 'enableExpiration' => true}
+        end
+        response = RestClient.post "#{@host}#{@path}#{api}", {'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'classification' => classification, 'expiration' => expiration, 'notes' => notes}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      end
       @upload_id = JSON.parse(response)["uploadId"]
     rescue
       puts $!
@@ -235,7 +244,17 @@ class SecureDataSpace
     
     begin
       api = "/shares/downloads"
-      response = RestClient.post "#{@host}#{@path}#{api}", {'nodeId' => node_id, 'name' => name, 'password' => password, 'notifyCreator' => notify_creator, 'expireAt' => expire_at, 'maxDownloads' => max_downloads, 'showCreatorName' => show_creator_name, 'showCreatorUsername' => show_creator_user_name, 'sendMail' => send_mail, 'mailRecipients' => mail_recipients, 'mailSubject' => mail_subject, 'mailBody' => mail_body}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token} 
+      if @path == "api/v3"
+        response = RestClient.post "#{@host}#{@path}#{api}", {'nodeId' => node_id, 'name' => name, 'password' => password, 'notifyCreator' => notify_creator, 'expireAt' => expire_at, 'maxDownloads' => max_downloads, 'showCreatorName' => show_creator_name, 'showCreatorUsername' => show_creator_user_name, 'sendMail' => send_mail, 'mailRecipients' => mail_recipients, 'mailSubject' => mail_subject, 'mailBody' => mail_body}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token} 
+      else
+        if expire_at == nil
+          expiration = nil
+        else
+          expiration = {'expireAt' => expire_at.to_s, 'enableExpiration' => true}
+        end
+        response = RestClient.post "#{@host}#{@path}#{api}", {'nodeId' => node_id, 'name' => name, 'password' => password, 'notifyCreator' => notify_creator, 'expiration' => expiration, 'maxDownloads' => max_downloads, 'showCreatorName' => show_creator_name, 'showCreatorUsername' => show_creator_user_name, 'sendMail' => send_mail, 'mailRecipients' => mail_recipients, 'mailSubject' => mail_subject, 'mailBody' => mail_body}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token} 
+      end
+
       share = JSON.parse(response)
     rescue
       puts $!

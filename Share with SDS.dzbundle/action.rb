@@ -5,7 +5,7 @@
 # Creator: Florian Scheuer
 # URL: https://github.com/F-Pseudonym/dropzone-share-with-sds
 # Events: Dragged, Clicked
-# KeyModifiers: Command, Control, Option
+# KeyModifiers: Command, Control, Option, Shift
 # SkipConfig: No
 # RunsSandboxed: Yes
 # OptionsNIB: ExtendedLogin
@@ -183,36 +183,41 @@ def dragged
     $dz.percent((i * ((90 - 10) / $items.count )) + 10)
   
   end
+  
+  # Share only if Shift is not pressed
+  unless ENV["KEY_MODIFIERS"] == 'Shift'
 
+    access_key = nil
   
-  access_key = nil
+    # Determine ID to share and name
+    if $items.count > 1
+      id = container_id
+      share_name = container_name
+    else
+      id = file_id
+      share_name = file_name
+    end
   
-  # Determine ID to share and name
-  if $items.count > 1
-    id = container_id
-    share_name = container_name
-  else
-    id = file_id
-    share_name = file_name
+    # Create share link
+    begin
+      $dz.begin("Creating Share Link")
+      share = sds.create_download_share id, share_name, share_password, false, expire_at = expiryDate
+      access_key = share["accessKey"]
+    rescue
+      $dz.fail("Error creating Share Link. Please check console for debug info.")
+    end
+  
+    if access_key == nil
+      $dz.fail("Error sharing file: No Access Key was provided")
+    end
+  
+  
+    share_link = share["link"]
+    $dz.save_value('last_share_link', share_link)
+
   end
   
-  # Create share link
-  begin
-    $dz.begin("Creating Share Link")
-    share = sds.create_download_share id, share_name, share_password, false, expire_at = expiryDate
-    access_key = share["accessKey"]
-  rescue
-    $dz.fail("Error creating Share Link. Please check console for debug info.")
-  end
-  
-  if access_key == nil
-    $dz.fail("Error sharing file: No Access Key was provided")
-  end
-  
-  
-  share_link = share["link"]
   $dz.percent(95)
-  $dz.save_value('last_share_link', share_link)
 
   
   # User logout
