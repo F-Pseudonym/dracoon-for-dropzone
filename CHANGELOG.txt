@@ -1,3 +1,5 @@
+Version 1.6
+-----------
 > Updated compatibility with API v4 (new request attributes for expiration dates).
 > Simple upload if Shift is pressed – no share operation in this case.
 > If no protocol http or https is provided, https is assumed and added automatically.
