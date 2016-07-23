@@ -1,5 +1,7 @@
-> Fixed a bug with special characters or whitespaces in path names
-> Leading and trailing slashes at path names will be removed silently
+> If no protocol http or https is provided, https is assumed and added automatically.
+> Introduced several progress messages to keep user informed about current actions.
+> Fixed a bug with special characters or whitespaces in path names.
+> Leading and trailing slashes at path names will be removed silently.
 
 
 Version 1.5

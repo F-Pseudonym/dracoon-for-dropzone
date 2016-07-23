@@ -23,7 +23,12 @@ DEFAULT_VALIDITY = 14 #days
 
 def dragged  
 
-  sds = SecureDataSpace.new ENV["server"]  
+  server = ENV["server"]
+  unless server.start_with?("http://") || server.start_with?("https://")
+    server = "https://" + server
+  end
+
+  sds = SecureDataSpace.new server
 
       
   $dz.begin("Starting Preparations")
