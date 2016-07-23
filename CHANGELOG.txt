@@ -1,3 +1,8 @@
+Version 1.7
+-----------
+> Hotfix: API v3 was not 100% compatible anymore.
+
+
 Version 1.6
 -----------
 > Updated compatibility with API v4 (new request attributes for expiration dates).
