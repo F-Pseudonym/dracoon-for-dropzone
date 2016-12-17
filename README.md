@@ -12,7 +12,7 @@ If you do not own an account for Secure Data Space you can sign up for a demo ac
 <a href="https://github.com/F-Pseudonym/dropzone-share-with-sds/releases/latest">Download the latest version</a> of this action and unzip it on your Mac. Click on the action named "Share with SDS.dzbundle" to install it to your Dropzone. You are prompted to immedately add it to the grid.
 
 After adding the action to your grid you need to setup your account and the location your files will be stored.
-![Screenshot of Setup Dialogue](http://blog.florian-scheuer.de/wp-content/uploads/2016/07/setup-share-with-sds.png)
+![Screenshot of Setup Dialogue](https://florian-scheuer.de/wp-content/uploads/2016/07/setup-share-with-sds.png)
 Please enter the URL of your *Secure Data Space* Instance (should usually be *https://dataspace.ssp-europe.eu*), your username and your password. In the field *Remote Path* please specify the logical path in your Data Space where your files should be stored. You can select existing and non-existing path elements; new intermediate folders will be created on first usage.
 The fields "Port" and "Root URL" are currently not used – you can leave them empty.
 
