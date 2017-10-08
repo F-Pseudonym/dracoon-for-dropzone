@@ -1,4 +1,4 @@
-# dropzone-share-with-sds
+# dropzone-share-with-dracoon
 Action for Dropzone to easily share files via *DRACOON*
 
 ## Disclaimer
