@@ -1,3 +1,8 @@
+Version 1.8
+-----------
+> Applied Rebranding Secure Data Space -> DRACOON.
+
+
 Version 1.7
 -----------
 > Hotfix: API v3 was not 100% compatible anymore.
