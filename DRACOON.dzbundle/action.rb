@@ -3,7 +3,7 @@
 # Description: Upload a file to DRACOON and create a Download Share (URL will be placed in clipboard). Holding 'Command' (⌘) or 'Option' (⌥) will expire the uploaded file and its Download Share after 14 days, 'Control' (^) or 'Option' (⌥) will allow you to set a password for the Download Share. Holding 'Shift' (⇧) just uploads the file without sharing it. Clicking on this Action copies the latest Share Link to the clipboard.\nIcon is property of DRACOON GmbH.
 # Handles: Files
 # Creator: Florian Scheuer
-# URL: https://github.com/F-Pseudonym/dropzone-share-with-dracoon
+# URL: https://github.com/F-Pseudonym/dracoon-for-dropzone
 # Events: Dragged, Clicked
 # KeyModifiers: Command, Control, Option, Shift
 # SkipConfig: No
