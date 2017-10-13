@@ -19,7 +19,7 @@ The fields "Port" and "Root URL" are currently not used – you can leave them e
 ## Usage
 Simply drag one or more files you'd like to share on the action in your Dropzone grid. The files will be uploaded and a Download Share is automatically created and its link placed in your clipboard. Simply paste it wherever you need it.
 
-If you hold the Command Key (⌘) or the Option Key (⌥) while releasing your files, an erpiration date for the file(s) and the Download Share will be set to 14 days. This will result in Download Share and file(s) to be removed after two weeks from *DRACOON*.
+If you hold the Command Key (⌘) or the Option Key (⌥) while releasing your files, an expiration date for the file(s) and the Download Share will be set to 14 days. This will result in Download Share and file(s) to be removed after two weeks from *DRACOON*.
 
 By holding the Control Key (^) or the Option Key (⌥) while releasing your files, you will be prompted for a password to protect your Download Share. Please keep in mind that password policies might be enforced.
 
