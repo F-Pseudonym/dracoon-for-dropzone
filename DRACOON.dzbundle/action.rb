@@ -1,6 +1,6 @@
 # Dropzone Action Info
-# Name: Share with DRACOON
-# Description: Upload a file to DRACOON and create a share link (URL will be placed clipboard). Holding 'Command' (⌘) or 'Option' (⌥) will expire the uploaded file and its share link after 14 days, 'Control' (^) or 'Option' (⌥) will allow you to set a password for the share link. Holding 'Shift' (⇧) just uploads the file without sharing it. Clicking on this Action copies the latest share link to the clipboard.\nIcon is property of DRACOON GmbH.
+# Name: DRACOON
+# Description: Upload a file to DRACOON and create a Download Share (URL will be placed in clipboard). Holding 'Command' (⌘) or 'Option' (⌥) will expire the uploaded file and its Download Share after 14 days, 'Control' (^) or 'Option' (⌥) will allow you to set a password for the Download Share. Holding 'Shift' (⇧) just uploads the file without sharing it. Clicking on this Action copies the latest Share Link to the clipboard.\nIcon is property of DRACOON GmbH.
 # Handles: Files
 # Creator: Florian Scheuer
 # URL: https://github.com/F-Pseudonym/dropzone-share-with-dracoon
