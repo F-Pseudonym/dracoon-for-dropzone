@@ -1,8 +1,8 @@
-# dropzone-share-with-dracoon
+# DRACOON for Dropzone
 Action for Dropzone to easily share files via *DRACOON*
 
 ## Disclaimer
-*DRACOON* is a cloud storage product/service by *DRACOON GmbH* (http://dracoon.com). The icon is property of *DRACOON*.
+*DRACOON* is a cloud storage product/service by *DRACOON GmbH* (http://dracoon.com). The icon is property of *DRACOON GmbH*.
 
 ## General Information
 This action for Dropzone 3 for Mac (https://aptonic.com/) can be used to easily upload files to *DRACOON* and provide a Share Link which is placed in the clipboard. This Share Link can be used to provide the uploaded file(s) to third parties.
