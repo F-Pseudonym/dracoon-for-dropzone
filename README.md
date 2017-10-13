@@ -9,7 +9,7 @@ This action for Dropzone 3 for Mac (https://aptonic.com/) can be used to easily 
 If you do not own an account for DRACOON you can sign up for a free account here: https://www.dracoon.com.
 
 ## Installation
-<a href="https://github.com/F-Pseudonym/dropzone-share-with-sds/releases/latest">Download the latest version</a> of this action and unzip it on your Mac. Click on the action named "Share with DRACOON.dzbundle" to install it to your Dropzone. You are prompted to immedately add it to the grid.
+<a href="https://github.com/F-Pseudonym/dropzone-share-with-dracoon/releases/latest">Download the latest version</a> of this action and unzip it on your Mac. Click on the action named "Share with DRACOON.dzbundle" to install it to your Dropzone. You are prompted to immedately add it to the grid.
 
 After adding the action to your grid you need to setup your account and the location your files will be stored.
 ![Screenshot of Setup Dialogue](https://florian-scheuer.de/wp-content/uploads/2016/07/setup-share-with-sds.png)

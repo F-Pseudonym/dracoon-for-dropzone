@@ -1,6 +1,7 @@
 Version 1.8
 -----------
 > Applied Rebranding Secure Data Space -> DRACOON.
+> Removed unnecessary functions
 
 
 Version 1.7
