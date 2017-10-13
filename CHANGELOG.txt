@@ -1,3 +1,10 @@
+Version 1.8
+-----------
+> Applied Rebranding Secure Data Space -> DRACOON.
+> Change Action name to DRACOON.
+> Removed unnecessary functions.
+
+
 Version 1.7
 -----------
 > Hotfix: API v3 was not 100% compatible anymore.
