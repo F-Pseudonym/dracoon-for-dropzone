@@ -1,4 +1,3 @@
-
 require 'rest_client'
 require 'json'
 require 'Date'
@@ -53,6 +52,15 @@ class Dracoon
       return nil
     end
     
+    begin
+      api = "/user/account"
+      response = RestClient.get "#{@host}#{@path}#{api}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      @user_id = JSON.parse(response)["id"]
+    rescue
+      puts $!
+      return nil
+    end
+      
     @auth_token
   end
 
@@ -112,7 +120,7 @@ class Dracoon
     self.login_required
     
     if admin_ids == nil
-      admin_ids = [@user.id]
+      admin_ids = [@user_id]
     end
     
     begin
@@ -275,4 +283,3 @@ class Dracoon
   
 
 end
-

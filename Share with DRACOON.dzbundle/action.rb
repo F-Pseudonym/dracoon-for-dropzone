@@ -114,7 +114,7 @@ def dragged
       # Create Room/Folder
       if container_id == 0
         begin
-          node =dracoon.create_room name
+          node = dracoon.create_room name
         rescue
           $dz.fail("Error creating Data Room. Please check console for debug info.")
         end
