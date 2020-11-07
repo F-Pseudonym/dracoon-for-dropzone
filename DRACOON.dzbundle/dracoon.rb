@@ -6,6 +6,7 @@ class Dracoon
   PATH = "/api/v4"
   VALID_RESOLUTION_STRATEGIES = ['autorename', 'fail', 'overwrite']
   MIN_VERSION = "4.23.0"
+  USER_AGENT = "DRACOON for Dropzone v2.0"
 
 
   def initialize(host)
@@ -24,7 +25,7 @@ class Dracoon
     # Check connectivity
     begin
       api = "/public/software/version"
-      response = RestClient.get "#{@host}#{PATH}#{api}", {:accept => :json}
+      response = RestClient.get "#{@host}#{PATH}#{api}", {:accept => :json, :user_agent => USER_AGENT}
       api_version = MultiJson.load(response)["restApiVersion"]
       @path = PATH
     rescue => e
@@ -134,7 +135,7 @@ class Dracoon
   def get_tokens_by_code(code)
     begin
       api = "#{@host}/oauth/token"
-      response = RestClient.post api, {"code" => code, "grant_type" => "authorization_code", "redirect_uri" => "https://staging.dracoon.com/oauth/callback", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded"}
+      response = RestClient.post api, {"code" => code, "grant_type" => "authorization_code", "redirect_uri" => "https://staging.dracoon.com/oauth/callback", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded", :user_agent => USER_AGENT}
       data = MultiJson.load(response)
       return data["access_token"], data["refresh_token"]
 
@@ -148,7 +149,7 @@ class Dracoon
   
   def get_tokens_by_refresh_token
     api = "#{@host}/oauth/token"
-    response = RestClient.post api, {"grant_type" => "refresh_token", "refresh_token" => "#{ENV["refresh_token"]}", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded"}
+    response = RestClient.post api, {"grant_type" => "refresh_token", "refresh_token" => "#{ENV["refresh_token"]}", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded", :user_agent => USER_AGENT}
     data = MultiJson.load(response)
     return data["access_token"], data["refresh_token"]
   end
@@ -158,7 +159,7 @@ class Dracoon
     begin
       api = "#{@host}#{@path}/user/account"
       
-      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       return MultiJson.load(response)
 
     rescue StandardError => e
@@ -184,7 +185,7 @@ class Dracoon
     begin
       api = "#{@host}#{@path}/config/info/policies/passwords"
     
-      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       policies = MultiJson.load(response)["sharesPasswordPolicies"]
       
     rescue StandardError => e
@@ -223,7 +224,7 @@ class Dracoon
     begin
       api = "#{@host}#{@path}/nodes/#{id}"
     
-      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       node = MultiJson.load(response)
       return "#{node["parentPath"]}#{node["name"]}"
       
@@ -240,7 +241,7 @@ class Dracoon
     begin
       api = "#{@host}#{@path}/nodes?parent_id=#{parent_id}&filter=name%3Aeq%3A#{ERB::Util.url_encode(name)}"
       
-      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       data = MultiJson.load(response)
       
       if data["range"]["total"] != 1
@@ -263,19 +264,21 @@ class Dracoon
   end
   
   
-  def create_room(name, parent_id = 0)
+  def create_room(name, parent_id = nil)
     
     user_id = get_user_id
     admin_ids = [user_id]
+    if parent_id == 0
+      parent_id = nil
+    end
     
     begin
       api = "#{@host}#{@path}/nodes/rooms"
-      
-      response = RestClient.post api, MultiJson.dump({'name' => name, 'parentId' => parent_id, 'adminIds' => admin_ids}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.post api, MultiJson.dump({'name' => name, 'parentId' => parent_id, 'adminIds' => admin_ids}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       return MultiJson.load(response)
     rescue StandardError => e
       retries = 0
-      
+      puts $!
       if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
         retry if (retries += 1) < 3
       end
@@ -288,7 +291,7 @@ class Dracoon
     begin
       api = "#{@host}#{@path}/nodes/folders"
       
-      response = RestClient.post api, MultiJson.dump({'name' => name, 'parentId' => parent_id}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.post api, MultiJson.dump({'name' => name, 'parentId' => parent_id}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       return MultiJson.load(response)
     rescue StandardError => e
       retries = 0
@@ -321,7 +324,7 @@ class Dracoon
       else
         expiration = {'expireAt' => expiryDate.to_s, 'enableExpiration' => true}
       end
-      response = RestClient.post api, MultiJson.dump({'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'expiration' => expiration}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.post api, MultiJson.dump({'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'expiration' => expiration}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
 
       @upload_url = MultiJson.load(response)["uploadUrl"]
     rescue StandardError => e
@@ -334,7 +337,7 @@ class Dracoon
 
     # Upload file
     begin
-      response = RestClient.post @upload_url, {:multipart => true, :file => File.new(file)}, {:accept => :json}
+      response = RestClient.post @upload_url, {:multipart => true, :file => File.new(file)}, {:accept => :json, :user_agent => USER_AGENT}
     rescue StandardError => e
       retries = 0
       
@@ -345,7 +348,7 @@ class Dracoon
 
     # Finish upload
     begin
-      response = RestClient.put @upload_url, MultiJson.dump({'resolutionStrategy' => 'autorename'}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.put @upload_url, MultiJson.dump({'resolutionStrategy' => 'autorename'}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       file_info = MultiJson.load(response)
     rescue StandardError => e
       retries = 0
@@ -371,7 +374,7 @@ class Dracoon
       else
         expiration = {'expireAt' => expiryDate.to_s, 'enableExpiration' => true}
       end
-      response = RestClient.post api, MultiJson.dump({'nodeId' => node_id, 'password' => share_password, 'expiration' => expiration}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      response = RestClient.post api, MultiJson.dump({'nodeId' => node_id, 'password' => share_password, 'expiration' => expiration}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}", :user_agent => USER_AGENT}
       share = MultiJson.load(response)
 
     rescue StandardError => e
