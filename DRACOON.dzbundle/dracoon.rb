@@ -1,285 +1,391 @@
-require 'rest_client'
-require 'json'
-require 'Date'
-require 'digest'
-require 'securerandom'
-require 'uri'
-
+require 'rest-client'
+require 'multi_json'
 
 class Dracoon
   attr_reader :host, :auth_token, :user
   PATH = "/api/v4"
   VALID_RESOLUTION_STRATEGIES = ['autorename', 'fail', 'overwrite']
-  
+  MIN_VERSION = "4.23.0"
 
-  def initialize (host)
+
+  def initialize(host)
     @host = host.strip
-    
+
     # Protocol required
     if !@host.start_with?("https://") && !@host.start_with?("http://")
       fail("Please enter Server with https:// or http://")
     end
-    
+
     # Remove trailing /
     if @host.end_with?("/")
       @host = @host.slice(0,@host.size-1)
     end
-    
+
     # Check connectivity
     begin
       api = "/public/software/version"
       response = RestClient.get "#{@host}#{PATH}#{api}", {:accept => :json}
-      api_version = JSON.parse(response)["restApiVersion"]
+      api_version = MultiJson.load(response)["restApiVersion"]
       @path = PATH
-    rescue
-      puts $!
+    rescue => e
+      raise StandardError.new $!
     end
-    
-    if !api_version.start_with?("4.")
-      puts "FAIL. No supported API version at #{@path}: #{api_version}"
+
+    version = api_version.split('.').map{|v| v.to_i}
+    min_version = MIN_VERSION.split('.').map{|v| v.to_i}
+
+    unless (version <=> min_version) == 1
+      fail("Incompatible API version. Actual: #{api_version}; required: #{MIN_VERSION}")
+    end
+  end
+  
+
+  
+  def authorize
+    # no authorization available
+    if ENV["authorization_token"] == nil
+      code = start_authorization
+  
+      authorization_token, refresh_token = get_tokens_by_code(code)
+      $dz.save_value('authorization_token', authorization_token)
+      $dz.save_value('refresh_token', refresh_token)
+      ENV["authorization_token"] = authorization_token
+      return
+
+    else
+      begin
+        authorization_token, refresh_token = get_tokens_by_refresh_token
+        $dz.save_value('authorization_token', authorization_token)
+        $dz.save_value('refresh_token', refresh_token)
+        ENV["authorization_token"] = authorization_token
+        return
+      rescue StandardError => e
+        #expired refresh token or other issue
+        code = start_authorization
+  
+        authorization_token, refresh_token = get_tokens_by_code(code)
+        $dz.save_value('authorization_token', authorization_token)
+        $dz.save_value('refresh_token', refresh_token)  
+        ENV["authorization_token"] = authorization_token
+        return   
+      end
+ 
     end
     
   end
-  
-  
-  def login(username, password)
-    begin
-      api = "/auth/login"
-      response = RestClient.post "#{@host}#{@path}#{api}", { 'login' => username, 'password' => password}.to_json, {:content_type => :json, :accept => :json}
-      @auth_token = JSON.parse(response)["token"]
-    rescue
-      puts $!
-      return nil
-    end
-    
-    begin
-      api = "/user/account"
-      response = RestClient.get "#{@host}#{@path}#{api}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-      @user_id = JSON.parse(response)["id"]
-    rescue
-      puts $!
-      return nil
-    end
+
+
+
+  def authorize_old
+    unless ENV["authorization_token"] == nil
       
-    @auth_token
+      begin
+        profile = get_profile
+      rescue StandardError => e
+        if e.response.code == 401
+          #expired auth token
+          begin
+            authorization_token, refresh_token = get_tokens_by_refresh_token
+            $dz.save_value('authorization_token', authorization_token)
+            $dz.save_value('refresh_token', refresh_token)
+          rescue StandardError => e
+            #expired refresh token or other issue
+            code = start_authorization
+      
+            authorization_token, refresh_token = get_tokens_by_code(code)
+            $dz.save_value('authorization_token', authorization_token)
+            $dz.save_value('refresh_token', refresh_token)     
+          end
+          
+        else
+          #other issue
+          code = start_authorization
+      
+          authorization_token, refresh_token = get_tokens_by_code(code)
+          $dz.save_value('authorization_token', authorization_token)
+          $dz.save_value('refresh_token', refresh_token)
+        end
+      end
+      
+    else
+      #no auth token
+      code = start_authorization
+      
+      authorization_token, refresh_token = dracoon.get_tokens_by_code(code)
+      $dz.save_value('authorization_token', authorization_token)
+      $dz.save_value('refresh_token', refresh_token)
+    end
+  end
+  
+
+  def start_authorization
+    auth_url = "#{host}/oauth/authorize?branding=full&response_type=code&client_id=H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT&redirect_uri=https%3A%2F%2Fstaging.dracoon.com/oauth/callback&scope=all"
+    %x{open "#{auth_url}"}
+    dialog = "
+    *.title = DRACOON Authorization
+    p.type = textfield
+    p.label = Paste Authorization Code
+    "
+    code = $dz.pashua(dialog)["p"]
+    return code
   end
 
+
+  def get_tokens_by_code(code)
+    begin
+      api = "#{@host}/oauth/token"
+      response = RestClient.post api, {"code" => code, "grant_type" => "authorization_code", "redirect_uri" => "https://staging.dracoon.com/oauth/callback", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded"}
+      data = MultiJson.load(response)
+      return data["access_token"], data["refresh_token"]
+
+    rescue StandardError => e
+      puts $!
+      puts e.response
+      return nil, nil
+    end
+  end
   
-  def logout
-    self.login_required
+  
+  def get_tokens_by_refresh_token
+    api = "#{@host}/oauth/token"
+    response = RestClient.post api, {"grant_type" => "refresh_token", "refresh_token" => "#{ENV["refresh_token"]}", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded"}
+    data = MultiJson.load(response)
+    return data["access_token"], data["refresh_token"]
+  end
+  
+  
+  def get_profile
+    begin
+      api = "#{@host}#{@path}/user/account"
+      
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      return MultiJson.load(response)
+
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 401
+        authorize
+        retry if (retries += 1) < 2
+      elseif e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3 
+      else
+        puts $!
+        puts e.response
+        return nil
+      end
+    end  
+  end
+  
+  
+  def check_password_compliance(password)
+    
+    # get policy
+    begin
+      api = "#{@host}#{@path}/config/info/policies/passwords"
+    
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      policies = MultiJson.load(response)["sharesPasswordPolicies"]
+      
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 401
+        authorize
+        retry if (retries +=1) <2
+      else
+        puts $!
+        puts e.response
+      end
+    end
+    
+    return false if password.length < policies["minLength"]
+    return false if (policies["characterRules"]["mustContainCharacters"].include? 'lowercase') && (/[a-z]/.match(password) == nil)
+    return false if (policies["characterRules"]["mustContainCharacters"].include? 'numeric') && (/[0-9]/.match(password) == nil)
+    return false if (policies["characterRules"]["mustContainCharacters"].include? 'uppercase') && (/[A-Z]/.match(password) == nil)
+    return false if (policies["characterRules"]["mustContainCharacters"].include? 'special') && (/[\W]/.match(password) == nil)
+    
+    return true
+    
+  end
+  
+  
+  def get_homeroom_path
+    
+    profile = get_profile
+    homeroom_id = profile["homeRoomId"]
+    
+    return get_path_by_node_id homeroom_id 
+  end
+  
+  
+  def get_path_by_node_id(id)
+    begin
+      api = "#{@host}#{@path}/nodes/#{id}"
+    
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      node = MultiJson.load(response)
+      return "#{node["parentPath"]}#{node["name"]}"
+      
+    rescue StandardError => e
+      puts $!
+      puts e.response
+    end
+    
+    return nil
+  end
+  
+  
+  def get_node_by_name(name, parent_id = 0)
+    begin
+      api = "#{@host}#{@path}/nodes?parent_id=#{parent_id}&filter=name%3Aeq%3A#{ERB::Util.url_encode(name)}"
+      
+      response = RestClient.get api, {:accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      data = MultiJson.load(response)
+      
+      if data["range"]["total"] != 1
+        return nil
+      else
+        return data["items"][0]
+      end
+      
+    rescue StandardError => e
+      retries = 0
+      if e.response.code == 401
+        authorize
+        retry if (retries += 1) < 2
+      elseif e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      else
+        raise e
+      end
+    end
+  end
+  
+  
+  def create_room(name, parent_id = 0)
+    
+    user_id = get_user_id
+    admin_ids = [user_id]
     
     begin
-      api = "/user/logout"
-      response = RestClient.post "#{@host}#{@path}#{api}", {}, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-    rescue
-      puts $!
-      fail("Could not log out.")
+      api = "#{@host}#{@path}/nodes/rooms"
+      
+      response = RestClient.post api, MultiJson.dump({'name' => name, 'parentId' => parent_id, 'adminIds' => admin_ids}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      return MultiJson.load(response)
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      end
     end
-    true
   end
-
-
-  def nodes(parent_id = 0, depth_level = 0, filter = nil, sort = nil, offset = nil, limit = nil)
-    self.login_required
-    
-    params = "?parent_id=#{parent_id}&depth_level=#{depth_level}"
-    if filter != nil
-      params = params + "&filter=#{filter}"
-    end
-    if sort != nil
-      params = params + "&sort=#{sort}"
-    end
-    if offset != nil
-      params = params + "&offset=#{offset}"
-    end
-    if limit != nil
-      params = params + "&limit=#{limit}"
-    end
+  
+  
+  def create_folder(name, parent_id = 0)
     
     begin
-      api = "/nodes"
-      response = RestClient.get "#{@host}#{@path}#{api}#{params}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-      nodes = JSON.parse(response)
-    rescue
-      puts $!
-      fail("Could not retrieve nodes.")
+      api = "#{@host}#{@path}/nodes/folders"
+      
+      response = RestClient.post api, MultiJson.dump({'name' => name, 'parentId' => parent_id}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      return MultiJson.load(response)
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      end
     end
-    
-    nodes
   end
   
   
-  def get_nodes_by_name(name, parent_id = 0, depth_level = 0)
-    self.login_required
-
-    nodes(parent_id, depth_level, filter = "name:cn:#{URI.escape(name)}")
+  def get_user_id
+    return get_profile["id"]
   end
   
   
-  def create_room(name, parent_id = nil, admin_ids = nil, quota = nil, has_recycle_bin = nil, recycle_bin_retention_period = nil)
-    self.login_required
+  def upload_file(file, parent_id, expiryDate = nil)
     
-    if admin_ids == nil
-      admin_ids = [@user_id]
-    end
-    
-    begin
-      api = "/nodes/rooms"
-      response = RestClient.post "#{@host}#{@path}#{api}", {'name' => name, 'parentId' => parent_id, 'adminIds' => admin_ids, 'quota' => quota, 'hasRecycleBin' => has_recycle_bin, 'recycleBinRetentionPeriod' => recycle_bin_retention_period}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-      node = JSON.parse(response)
-    rescue
-      puts $!
-      fail("Could not create room.")
-    end
-    
-    node
-  end
-
-
-  def create_folder(name, parent_id)
-    self.login_required
-        
-    begin
-      api = "/nodes/folders"
-      response = RestClient.post "#{@host}#{@path}#{api}", {'name' => name, 'parentId' => parent_id}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-      node = JSON.parse(response)
-    rescue
-      puts $!
-      fail("Could not create folder.")
-    end
-    node
-  end
-
-
-  def upload_file(file, parent_id, expire_at = nil, resolution_strategy = "autorename", classification = 1, notes = nil)
-    self.login_required
-
     if !File.file? file
       fail("File does not exist or is not accessible!")
     end
     file_name = File.basename file
     file_size = File.new(file).size
-
-    if !VALID_RESOLUTION_STRATEGIES.include? resolution_strategy
-      fail("Invalid resolution strategy.")
-    end
     
     # Create upload channel
     begin
-      api = "/nodes/files/uploads"
-      if expire_at == nil
+      api = "#{@host}#{@path}/nodes/files/uploads"
+      if expiryDate == nil
         expiration = nil
       else
-        expiration = {'expireAt' => expire_at.to_s, 'enableExpiration' => true}
+        expiration = {'expireAt' => expiryDate.to_s, 'enableExpiration' => true}
       end
-      response = RestClient.post "#{@host}#{@path}#{api}", {'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'classification' => classification, 'expiration' => expiration, 'notes' => notes}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
+      response = RestClient.post api, MultiJson.dump({'parentId' => parent_id,'name' => file_name, 'size' => file_size, 'expiration' => expiration}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
 
-      @upload_id = JSON.parse(response)["uploadId"]
-    rescue
-      puts $!
-      fail("Could not establish Upload Channel.")
+      @upload_url = MultiJson.load(response)["uploadUrl"]
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      end
     end
 
     # Upload file
     begin
-      api = "/nodes/files/uploads"
-      response = RestClient.post "#{@host}#{@path}#{api}/#{@upload_id}", {:multipart => true, :file => File.new(file)}, {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-    rescue
-      puts $!
-      fail("Could not transfer file.")
+      response = RestClient.post @upload_url, {:multipart => true, :file => File.new(file)}, {:accept => :json}
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      end
     end
 
     # Finish upload
     begin
-      api = "/nodes/files/uploads"
-      response = RestClient.put "#{@host}#{@path}#{api}/#{@upload_id}",{'resolutionStrategy' => resolution_strategy}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-      file_info = JSON.parse(response)
-    rescue
-      puts $!
-      fail("Could not finish upload.")
+      response = RestClient.put @upload_url, MultiJson.dump({'resolutionStrategy' => 'autorename'}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      file_info = MultiJson.load(response)
+    rescue StandardError => e
+      retries = 0
+      
+      if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      end
     end
-    
-    file_info
+
+    return file_info   
   end
-
-
-  def create_download_share(node_id, name = nil, password = nil, notify_creator = false, expire_at = nil, max_downloads = nil, show_creator_name = nil, show_creator_user_name = nil, send_mail = false, mail_recipients = nil, mail_subject = nil, mail_body = nil)
-    self.login_required
-    
+  
+  
+  def create_download_share(node_id, share_password = nil, expiryDate = nil)
     if !node_id.is_a? Integer
       fail("Node ID must be an Integer.")
     end
-    
-    if name == nil
-      name = SecureRandom.uuid
-    end
-    
+
     begin
-      api = "/shares/downloads"
-      if expire_at == nil
+      api = "#{@host}#{@path}/shares/downloads"
+      if expiryDate == nil
         expiration = nil
       else
-        expiration = {'expireAt' => expire_at.to_s, 'enableExpiration' => true}
+        expiration = {'expireAt' => expiryDate.to_s, 'enableExpiration' => true}
       end
-      response = RestClient.post "#{@host}#{@path}#{api}", {'nodeId' => node_id, 'name' => name, 'password' => password, 'notifyCreator' => notify_creator, 'expiration' => expiration, 'maxDownloads' => max_downloads, 'showCreatorName' => show_creator_name, 'showCreatorUsername' => show_creator_user_name, 'sendMail' => send_mail, 'mailRecipients' => mail_recipients, 'mailSubject' => mail_subject, 'mailBody' => mail_body}.to_json, {:content_type => :json, :accept => :json, 'X-Sds-Auth-Token' => @auth_token} 
+      response = RestClient.post api, MultiJson.dump({'nodeId' => node_id, 'password' => share_password, 'expiration' => expiration}), {:content_type => :json, :accept => :json, :Authorization => "Bearer #{ENV["authorization_token"]}"}
+      share = MultiJson.load(response)
 
-      share = JSON.parse(response)
-    rescue
+    rescue StandardError => e
+      retries = 0
+      
       puts $!
-      fail("Could not create Download Share")
+      if e.response.code == 500 || e.response.code == 503 || e.response.code == 504
+        retry if (retries += 1) < 3
+      end
     end
-    
+
     link = "#{@host}/#/public/shares-downloads/#{share["accessKey"]}"
     share["link"] = link
-    share
-  end
- 
-
-  def check_password_compliance(password)
-    self.login_required
-    
-    if password == nil
-      return false
-    end
-    
-    begin
-      api = "/config/settings"
-      response = RestClient.get "#{@host}#{@path}#{api}", {:accept => :json, 'X-Sds-Auth-Token' => @auth_token}
-      settings = JSON.parse(response)
-    rescue
-      puts $!
-    end
-    
-    allow_weak_passwords = false
-    settings["items"].each do |item|
-      if item["key"] == "allow_system_global_weak_password"
-        if item["value"] == true
-          allow_weak_passwords = true
-          break
-        else
-          allow_weak_passwords = false
-          break
-        end
-      end 
-    end
-    
-    return false if password.length < 8
-    return false if /[a-z]/.match(password) == nil
-    return false if /[0-9]/.match(password) == nil
-    return false if allow_weak_passwords == false && /[A-Z]/.match(password) == nil
-    return false if allow_weak_passwords == false && /[\W]/.match(password) == nil
-
-    return true
-  end
-
-
-  protected
-
-  def login_required
-    if @auth_token == nil
-      fail("Login Required!")
-    end
+    return share
   end
   
-
 end

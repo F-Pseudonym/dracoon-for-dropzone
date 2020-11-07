@@ -5,15 +5,15 @@ Action for Dropzone to easily share files via *DRACOON*
 *DRACOON* is a cloud storage product/service by *DRACOON GmbH* (http://dracoon.com). The icon is property of *DRACOON GmbH*.
 
 ## General Information
-This action for Dropzone 3 for Mac (https://aptonic.com/) can be used to easily upload files to *DRACOON* and create a Download Share which is placed in the clipboard. This Share Link can be used to provide the uploaded file(s) to third parties.
+This action for Dropzone 3 and Dropzone 4 for Mac (https://aptonic.com/) can be used to easily upload files to *DRACOON* and create a Download Share which is placed in the clipboard. This Share Link can be used to provide the uploaded file(s) to third parties.
 If you do not own an account for DRACOON you can sign up for a free account here: https://www.dracoon.com.
 
 ## Installation
 <a href="https://github.com/F-Pseudonym/dracoon-for-dropzone/releases/latest">Download the latest version</a> of this action and unzip it on your Mac. Double click on the action named "DRACOON.dzbundle" to install it to your Dropzone. You are prompted to immedately add it to the grid.
 
 After adding the action to your grid you need to setup your account and the location your files will be stored.
-![Screenshot of Setup Dialogue](https://florian-scheuer.de/wp-content/uploads/2017/10/setup-dracoon-for-dropzone.png)
-Please enter the URL of your *DRACOON* instance (should usually be *https://dracoon.team*), your username and your password. In the field *Remote Path* please specify the logical path in your DRACOON where your files should be stored. You can select existing and non-existing path elements; new intermediate folders will be created on first usage.
+![Screenshot of setup dialog](https://florian-scheuer.de/wp-content/uploads/2020/11/setup-dracoon-for-dropzone-2.0.png)
+Please enter the URL of your *DRACOON* instance (should usually be *https://dracoon.team*); the fields username and password are not used (however, you need to enter anything in the username field). In the field *Remote Path* please specify the logical path in your DRACOON where your files should be stored. If you leave this free, the action tries to create a default location for you. You can select existing and non-existing path elements; new intermediate folders will be created on first usage (Example: /my files/drop here).
 The fields "Port" and "Root URL" are currently not used – you can leave them empty.
 
 ## Usage
