@@ -120,7 +120,7 @@ class Dracoon
   
 
   def start_authorization
-    auth_url = "#{host}/oauth/authorize?branding=full&response_type=code&client_id=H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT&redirect_uri=https%3A%2F%2Fstaging.dracoon.com/oauth/callback&scope=all"
+    auth_url = "#{host}/oauth/authorize?branding=full&response_type=code&client_id=Phc9SxLh17WY8cxzilAJWh0hICXZAqh7&redirect_uri=https%3A%2F%2Fstaging.dracoon.com/oauth/callback&scope=all"
     %x{open "#{auth_url}"}
     dialog = "
     *.title = DRACOON Authorization
@@ -135,7 +135,7 @@ class Dracoon
   def get_tokens_by_code(code)
     begin
       api = "#{@host}/oauth/token"
-      response = RestClient.post api, {"code" => code, "grant_type" => "authorization_code", "redirect_uri" => "https://staging.dracoon.com/oauth/callback", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded", :user_agent => USER_AGENT}
+      response = RestClient.post api, {"code" => code, "grant_type" => "authorization_code", "redirect_uri" => "https://staging.dracoon.com/oauth/callback", "client_id" => "Phc9SxLh17WY8cxzilAJWh0hICXZAqh7", "client_secret" => "OEqVy6HCKCLmnHlzsEvrtCTCp4BOfvLj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded", :user_agent => USER_AGENT}
       data = MultiJson.load(response)
       return data["access_token"], data["refresh_token"]
 
@@ -149,7 +149,7 @@ class Dracoon
   
   def get_tokens_by_refresh_token
     api = "#{@host}/oauth/token"
-    response = RestClient.post api, {"grant_type" => "refresh_token", "refresh_token" => "#{ENV["refresh_token"]}", "client_id" => "H4Jb71wZaJ6zQPug2Dc5WY4OyUbCRgXT", "client_secret" => "GYUikahfTl8Gwa2mJNoSXXVeinc2Zgkj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded", :user_agent => USER_AGENT}
+    response = RestClient.post api, {"grant_type" => "refresh_token", "refresh_token" => "#{ENV["refresh_token"]}", "client_id" => "Phc9SxLh17WY8cxzilAJWh0hICXZAqh7", "client_secret" => "OEqVy6HCKCLmnHlzsEvrtCTCp4BOfvLj"}, {:accept => :json, :content_type => "application/x-www-form-urlencoded", :user_agent => USER_AGENT}
     data = MultiJson.load(response)
     return data["access_token"], data["refresh_token"]
   end
