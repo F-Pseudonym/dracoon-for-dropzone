@@ -9,7 +9,7 @@
 # SkipConfig: No
 # RunsSandboxed: Yes
 # OptionsNIB: ExtendedLogin
-# Version: 2.0
+# Version: 2.0.1
 # MinDropzoneVersion: 3.0
 # UniqueID: 3920135319837973180911208394894
 
