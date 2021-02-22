@@ -41,7 +41,6 @@ class Dracoon
   end
   
 
-  
   def authorize
     # no authorization available
     if ENV["authorization_token"] == nil
@@ -70,54 +69,9 @@ class Dracoon
         ENV["authorization_token"] = authorization_token
         return   
       end
- 
-    end
-    
-  end
-
-
-
-  def authorize_old
-    unless ENV["authorization_token"] == nil
-      
-      begin
-        profile = get_profile
-      rescue StandardError => e
-        if e.response.code == 401
-          #expired auth token
-          begin
-            authorization_token, refresh_token = get_tokens_by_refresh_token
-            $dz.save_value('authorization_token', authorization_token)
-            $dz.save_value('refresh_token', refresh_token)
-          rescue StandardError => e
-            #expired refresh token or other issue
-            code = start_authorization
-      
-            authorization_token, refresh_token = get_tokens_by_code(code)
-            $dz.save_value('authorization_token', authorization_token)
-            $dz.save_value('refresh_token', refresh_token)     
-          end
-          
-        else
-          #other issue
-          code = start_authorization
-      
-          authorization_token, refresh_token = get_tokens_by_code(code)
-          $dz.save_value('authorization_token', authorization_token)
-          $dz.save_value('refresh_token', refresh_token)
-        end
-      end
-      
-    else
-      #no auth token
-      code = start_authorization
-      
-      authorization_token, refresh_token = dracoon.get_tokens_by_code(code)
-      $dz.save_value('authorization_token', authorization_token)
-      $dz.save_value('refresh_token', refresh_token)
     end
   end
-  
+
 
   def start_authorization
     auth_url = "#{host}/oauth/authorize?branding=full&response_type=code&client_id=Phc9SxLh17WY8cxzilAJWh0hICXZAqh7&redirect_uri=#{@host}/oauth/callback&scope=all"
@@ -207,7 +161,6 @@ class Dracoon
     return false if (policies["characterRules"]["mustContainCharacters"].include? 'special') && (/[\W]/.match(password) == nil)
     
     return true
-    
   end
   
   
